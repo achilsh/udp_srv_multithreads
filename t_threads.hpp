@@ -38,6 +38,7 @@ class PthreadBase
     protected:
      static void* Entry(void* pData);
      virtual int main() = 0;
+     virtual int Init() = 0;
      void SetRun()
      {
          m_bRun = true;

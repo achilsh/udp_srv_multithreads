@@ -11,29 +11,31 @@ namespace T_CLIENT
     {
     }
 
-    bool TestOneClient::Init()
+    int  TestOneClient::Init()
     {
         m_iFd = socket( AF_INET,  SOCK_DGRAM , 0 );
         if (m_iFd < 0)
         {
             std::cout << "sockect() call fail" << std::endl;
-            return false;
+            return -1;
         }
 
         m_stDestAddr.sin_family = AF_INET;
         m_stDestAddr.sin_addr.s_addr = inet_addr(const_cast<char*> (m_sRemoteIp.c_str()));
         m_stDestAddr.sin_port=htons(m_iRemotePort);
-        return true;
+        return 0;
     }
     //
     int TestOneClient::main()
     {
+        /***
         if (false == Init())
         {
             Stop();
             std::cout << "init TestOneClient fail, so stop it " << std::endl;
             return false;
         }
+        ***/
 
         for (int i = 0; i < m_iTestNums; ++i)
         {

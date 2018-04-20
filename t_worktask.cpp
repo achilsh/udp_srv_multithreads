@@ -18,8 +18,7 @@ namespace T_UDP
             m_UdpEvent  = NULL;
         }
     }
-
-    int WorkerTask::main()
+    int WorkerTask::Init() 
     {
         struct event_config *ev_config = event_config_new();
         event_config_set_flag(ev_config, EVENT_BASE_FLAG_NOLOCK);
@@ -31,6 +30,11 @@ namespace T_UDP
             m_bRun = false;
             return -1;
         }
+        return 0;
+    }
+
+    int WorkerTask::main()
+    {
         //
         if (m_UdpEvent == NULL)
         {
@@ -38,8 +42,9 @@ namespace T_UDP
             return -1;
         }
 
-        m_UdpEvent->AddEvent(m_PthreadEventBase,EV_READ | EV_PERSIST);
+        m_UdpEvent->AddEvent(m_PthreadEventBase, EV_READ | EV_PERSIST);
         event_base_dispatch(m_PthreadEventBase);
+        std::cout << "thread exit " << std::endl;
         m_bRun = false;
         return 0;
     }

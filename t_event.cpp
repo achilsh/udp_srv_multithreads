@@ -61,6 +61,8 @@ namespace T_UDP
         {
             return false;
         }
+        std::cout << "recv data: " <<  m_sRecv  << std::endl;
+
         DoCmd(iRet);
 
         memcpy(m_sSnd + m_uiwBufLen, m_sRecv, m_uirBufLen +  iRet);

@@ -21,7 +21,7 @@
 
 namespace T_UDP
 {
-    ///
+    /** **/
     class WorkerTask;
     class UdpServer 
     {

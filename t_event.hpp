@@ -5,6 +5,12 @@
  * @version: v0x0001
  * @date: 2018-04-18
  */
+
+#ifndef _T_EVENT_HPP_
+#define _T_EVENT_HPP_ 
+
+#include <iostream>
+
 #ifdef __cplusplus 
     extern "C" {
 #endif 
@@ -20,8 +26,6 @@
     }
 #endif
 
-#ifndef _T_EVENT_HPP_
-#define _T_EVENT_HPP_ 
 namespace T_UDP
 {
     #define MAX_RECV_LEN (1024)

@@ -46,7 +46,7 @@ namespace T_CLIENT
          virtual ~TestOneClient();
         protected:
          int main();
-         bool Init();
+         virtual int  Init();
         private:
          std::string m_sRemoteIp;
          int m_iRemotePort;

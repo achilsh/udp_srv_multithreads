@@ -31,6 +31,11 @@ namespace T_UDP
             return NULL;
         }
 
+        if (pThis->Init() < 0)
+        {
+            return NULL;
+        }
+
         pThis->SetRun();
         while(pThis->IsRun())
         {

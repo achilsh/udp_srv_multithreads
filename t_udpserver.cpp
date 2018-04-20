@@ -47,10 +47,11 @@ namespace T_UDP
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port   = htons(m_uiPort);
         serverAddr.sin_addr.s_addr = inet_addr(m_sIp.c_str());
-        bzero(&serverAddr.sin_zero, sizeof(serverAddr.sin_zero));
+        //bzero(&serverAddr.sin_zero, sizeof(serverAddr.sin_zero));
         int iRet = bind(m_iUdpFd, (sockaddr*)&serverAddr, sizeof(serverAddr));
         if (iRet != 0)
         {
+            std::cout << "bind fail, ip: " << m_sIp <<",port: " << m_uiPort << std::endl;
             return false;
         }
         m_bInit = true;
@@ -69,6 +70,7 @@ namespace T_UDP
         {
             int x = iIndex ? dup(m_iUdpFd): m_iUdpFd;
             vDupFdList.push_back(x);
+            std::cout << "new fd: " << x << std::endl;
         }
         return true;
     }
