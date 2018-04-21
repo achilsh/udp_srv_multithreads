@@ -48,7 +48,7 @@ namespace T_CLIENT
                 std::cout << "err send pid: " << GetThreadId()  <<" , send data to srv fail, " << strerror(errno) << std::endl;
                 break;
             }
-            std::cout <<"succ send pid: " << GetThreadId()  << ",send data: " << buf << std::endl;
+            std::cout <<"succ send pid: " << GetThreadId()  << ", send data: " << buf << std::endl;
 
             memset(buf,0,sizeof(buf));
             struct sockaddr_in rcvNode;
@@ -59,7 +59,7 @@ namespace T_CLIENT
                 std::cout << "err recv pid: " << GetThreadId()  <<", recvfrom udp srv response fail " << std::endl;
                 break;
             }
-            std::cout << "succ recv pid: " << GetThreadId()  << "recv data: " << buf << std::endl;
+            std::cout << "succ recv pid: " << GetThreadId()  << ", recv data: " << buf << std::endl;
         }
         this->Stop();
         return 0;

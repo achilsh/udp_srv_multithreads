@@ -37,14 +37,15 @@ namespace T_UDP
       static void ReadCallBack(int iFd, short sEvent, void *pData);
       static void WriteCallBack(int iFd, short sEvent, void *pData);
       bool AddEvent(struct event_base *pEvBase, int iEvent);
-      bool DelEvent(struct event_base *pEvBase, int iEvent);
+      bool DelEvent(struct event_base *pEvBase, struct event* pEvent, int iEvent);
      private:
       bool DoReadProcess(int iFd);
       bool DoWriteProcess(int iFd);
       bool DoCmd(int iret);
      private:
       int m_iFd;
-      struct event m_stEvent; 
+      struct event  m_stREvent; 
+      struct event  m_stWEvent;
      
       char *m_sRecv;
       unsigned int  m_uirBufLen;

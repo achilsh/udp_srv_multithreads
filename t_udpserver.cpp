@@ -108,8 +108,10 @@ namespace T_UDP
         }
         
         std::vector<int> iFdList;
+        // 
+        /**<  有效解决多线程操作同一fd时，读事件到达后多个线程被唤醒，而结果只有一个
+         * 线程可以读到数据的问题,即惊群效应.*/
         DupUDPFd(iFdList);
-        
         for (int iIndex = 0; iIndex < m_WTItemNums; ++iIndex)
         {
             FdEvent * pEvent = new FdEvent(iFdList.at(iIndex));

@@ -1,5 +1,7 @@
 #include "t_event.hpp"
 
+#define ADDWRITEEVENT (1)
+
 namespace T_UDP
 {
     FdEvent::FdEvent(int iFd):m_iFd(iFd), m_uirBufLen(0), m_uiwBufLen(0) 
@@ -27,13 +29,15 @@ namespace T_UDP
         }
 
         //del  event
-        struct event_base *pEvBase = event_get_base(&m_stEvent);
-        int iOrigEvent = event_get_events(&m_stEvent);
-        DelEvent(pEvBase, iOrigEvent);
+        struct event_base *pEvBase = event_get_base(&m_stREvent);
+        int iOrigEvent = event_get_events(&m_stREvent);
+        DelEvent(pEvBase, &m_stREvent, iOrigEvent);
+        DelEvent(pEvBase, &m_stWEvent, iOrigEvent);
     }
 
     void FdEvent::ReadCallBack(int iFd, short sEvent, void *pData)  
     {
+        std::cout << "test 惊群效果, 单客户端，服务多线程，一次测试打印出现多次,则存在惊群效应" << std::endl;
         FdEvent* pEv = (FdEvent*)pData;
         if (pEv == NULL)
         {
@@ -44,6 +48,7 @@ namespace T_UDP
 
     bool FdEvent::DoCmd(int iret)
     {
+        //if req other remote node with udp.
         return true;
     }
     bool FdEvent::DoReadProcess(int iFd)
@@ -67,13 +72,19 @@ namespace T_UDP
 
         memcpy(m_sSnd + m_uiwBufLen, m_sRecv, m_uirBufLen +  iRet);
         m_uiwBufLen += m_uirBufLen +  iRet;
-        struct event_base *pEvBase = event_get_base(&m_stEvent);
+        struct event_base *pEvBase = event_get_base(&m_stREvent);
         if (pEvBase == NULL)
         {
             return false;
         }
-        AddEvent(pEvBase,EV_WRITE|EV_PERSIST);
+        ///////////////////////////////////////////////////////
         m_uirBufLen = 0;
+
+#ifdef ADDWRITEEVENT
+        AddEvent(pEvBase, EV_WRITE);
+#else
+        DoWriteProcess(iFd);
+#endif
         return true;
     }
 
@@ -83,19 +94,23 @@ namespace T_UDP
         {
             return false;
         }
+        bool bRet = false;
         int iRet  = ::sendto(iFd, m_sSnd, m_uiwBufLen, 0, (const struct sockaddr *)&m_rwHostAddr, 
                              sizeof(struct sockaddr_in));
         if (iRet < 0)
         {
-            return -1;
+            return bRet;
         }
         if (iRet != m_uiwBufLen)
         {
-            return -2;
+            return bRet;
         }
-
+    #ifdef  ADDWRITEEVENT
+        struct event_base *pEvBase = event_get_base(&m_stWEvent);
+        bRet = DelEvent( pEvBase, &m_stWEvent, EV_WRITE );
+    #endif
         m_uiwBufLen = 0;
-        return DelEvent( event_get_base(&m_stEvent), EV_WRITE );
+        return bRet;
     }
 
     void FdEvent::WriteCallBack(int iFd, short sEvent, void *pData)
@@ -114,15 +129,15 @@ namespace T_UDP
         }
         if (iEvent & EV_READ)
         {
-            event_set(&m_stEvent, m_iFd, iEvent, ReadCallBack, this);
-            event_base_set(pEvBase, &m_stEvent);
-            event_add(&m_stEvent, NULL);
+            event_set(&m_stREvent, m_iFd, iEvent, ReadCallBack, this);
+            event_base_set(pEvBase, &m_stREvent);
+            event_add(&m_stREvent, NULL);
         } 
         else if (iEvent & EV_WRITE)
         {
-            event_set(&m_stEvent, m_iFd, iEvent, WriteCallBack, this);
-            event_base_set(pEvBase, &m_stEvent);
-            event_add(&m_stEvent, NULL);
+            event_set(&m_stWEvent, m_iFd, iEvent, WriteCallBack, this);
+            event_base_set(pEvBase, &m_stWEvent);
+            event_add(&m_stWEvent, NULL);
         }
         else 
         {
@@ -131,16 +146,18 @@ namespace T_UDP
         return true;
     }
 
-    bool FdEvent::DelEvent(struct event_base *pEvBase, int iEvent)
+    bool FdEvent::DelEvent(struct event_base *pEvBase, struct event* pEvent, int iEvent)
     {
-        if (pEvBase == NULL)
+        if (pEvBase == NULL || pEvent == NULL)
         {
             return false;
         }
+
         //
-        int iOrigEvent = event_get_events(&m_stEvent);
+        int iOrigEvent = event_get_events(pEvent);
         int iNewEvent =  iOrigEvent & (~iEvent);
-        if (event_del(&m_stEvent))
+        std::cout << "begin to  del write event "  << std::endl;
+        if (event_del(pEvent))
         {
             return false;
         }
