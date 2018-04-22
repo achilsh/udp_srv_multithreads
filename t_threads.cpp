@@ -2,7 +2,15 @@
 
 namespace T_UDP
 {
-    PthreadBase::PthreadBase() :m_iPid(-1), m_bRun(false)
+    PthreadBase::PthreadBase() :m_iPid(-1), m_bRun(false),
+                                m_pInitLock(NULL), m_pInitCond(NULL),
+                                m_pReadyThreadNums(NULL)
+    {
+    }
+
+    PthreadBase::PthreadBase(pthread_mutex_t* pInitLock, pthread_cond_t* pInitCond, int* pInitNums)
+        :m_iPid(-1), m_bRun(false),m_pInitLock(pInitLock), m_pInitCond(pInitCond),
+        m_pReadyThreadNums(pInitNums)
     {
     }
 
@@ -46,5 +54,17 @@ namespace T_UDP
     void PthreadBase::JoinWork()
     {
        pthread_join(m_iPid, NULL); 
+    }
+
+    void PthreadBase::RegistePthreadToPool()
+    {
+        if (m_pInitLock == NULL || m_pInitCond == NULL || m_pReadyThreadNums == NULL)
+        {
+            return ;
+        }
+        pthread_mutex_lock(m_pInitLock);
+        ++(*m_pReadyThreadNums);
+        pthread_cond_signal(m_pInitCond);
+        pthread_mutex_unlock(m_pInitLock);
     }
 }

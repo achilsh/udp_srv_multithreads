@@ -4,13 +4,13 @@
 
 namespace T_UDP
 {
-    FdEvent::FdEvent(int iFd):m_iFd(iFd), m_uirBufLen(0), m_uiwBufLen(0) 
+    Conn::Conn(int iFd):m_iFd(iFd), m_uirBufLen(0), m_uiwBufLen(0) 
     {
         m_sRecv = new char[MAX_RECV_LEN];
         m_sSnd = new char[MAX_RECV_LEN];
     }
 
-    FdEvent::~FdEvent()
+    Conn ::~Conn()
     {
         if (m_iFd > 0)
         {
@@ -35,10 +35,10 @@ namespace T_UDP
         DelEvent(pEvBase, &m_stWEvent, iOrigEvent);
     }
 
-    void FdEvent::ReadCallBack(int iFd, short sEvent, void *pData)  
+    void Conn::ReadCallBack(int iFd, short sEvent, void *pData)  
     {
         std::cout << "test 惊群效果, 单客户端，服务多线程，一次测试打印出现多次,则存在惊群效应" << std::endl;
-        FdEvent* pEv = (FdEvent*)pData;
+        Conn* pEv = (Conn*)pData;
         if (pEv == NULL)
         {
             return ;
@@ -46,12 +46,12 @@ namespace T_UDP
         pEv->DoReadProcess(iFd);
     }
 
-    bool FdEvent::DoCmd(int iret)
+    bool Conn::DoCmd(int iret)
     {
         //if req other remote node with udp.
         return true;
     }
-    bool FdEvent::DoReadProcess(int iFd)
+    bool Conn::DoReadProcess(int iFd)
     {
         if (iFd <= 0)
         {
@@ -88,7 +88,7 @@ namespace T_UDP
         return true;
     }
 
-    bool FdEvent::DoWriteProcess(int iFd)
+    bool Conn::DoWriteProcess(int iFd)
     {
         if (iFd <=0)
         {
@@ -113,30 +113,30 @@ namespace T_UDP
         return bRet;
     }
 
-    void FdEvent::WriteCallBack(int iFd, short sEvent, void *pData)
+    void Conn::WriteCallBack(int iFd, short sEvent, void *pData)
     {
         //send response to client; 
-        FdEvent* pEv = (FdEvent*) pData;
+        Conn* pEv = (Conn*) pData;
         pEv->DoWriteProcess(iFd);
     }
 
 
-    bool FdEvent::AddEvent(struct event_base *pEvBase, int iEvent)
+    bool Conn::AddEvent(struct event_base *pEvBase, int iEvent)
     {
         if (pEvBase == NULL)
         {
+            std::cout << "event base is empty" << std::endl;
             return false;
         }
         if (iEvent & EV_READ)
         {
-            event_set(&m_stREvent, m_iFd, iEvent, ReadCallBack, this);
-            event_base_set(pEvBase, &m_stREvent);
+            event_assign(&m_stREvent, pEvBase, m_iFd, iEvent, ReadCallBack, this);
             event_add(&m_stREvent, NULL);
+            std::cout << "set EV_READ flag into r_event" << std::endl;
         } 
         else if (iEvent & EV_WRITE)
         {
-            event_set(&m_stWEvent, m_iFd, iEvent, WriteCallBack, this);
-            event_base_set(pEvBase, &m_stWEvent);
+            event_assign(&m_stWEvent, pEvBase, m_iFd, iEvent, WriteCallBack, this);
             event_add(&m_stWEvent, NULL);
         }
         else 
@@ -146,7 +146,7 @@ namespace T_UDP
         return true;
     }
 
-    bool FdEvent::DelEvent(struct event_base *pEvBase, struct event* pEvent, int iEvent)
+    bool Conn::DelEvent(struct event_base *pEvBase, struct event* pEvent, int iEvent)
     {
         if (pEvBase == NULL || pEvent == NULL)
         {

@@ -7,26 +7,25 @@ namespace T_UDP
 {
     ////////////////////////////////////////////////////////////
     UdpServer::UdpServer(const std::string& sIp, unsigned short uiPort, int threadNums)
-        : m_sIp(sIp), m_uiPort(uiPort), m_bInit(false), m_iUdpFd(-1), m_WTItemNums(threadNums)
+        : m_sIp(sIp), m_uiPort(uiPort), m_bInit(false), m_iUdpFd(-1), m_pWTList(NULL),
+        m_WTItemNums(threadNums)
     {
         m_bInit = Init();
     }
 
     UdpServer::~UdpServer() 
     {
-        if (m_iUdpFd > 0)
+        if (m_pWTList != NULL)
         {
-            close(m_iUdpFd); m_iUdpFd = -1;
+            delete m_pWTList; 
+            m_pWTList = NULL;
         }
-        for (std::vector<WorkerTask*>::iterator it = m_WTList.begin(); it != m_WTList.end(); ++it)
+
+        for (std::vector<Conn*>::iterator it = m_pEventList.begin(); it != m_pEventList.end(); ++it)
         {
-            if (*it != NULL)
-            {
-                delete  (*it);
-            }
+            delete (*it);
         }
-        //
-        m_WTList.clear();
+        m_pEventList.clear();
         //
         m_bInit = false;
     }
@@ -37,6 +36,7 @@ namespace T_UDP
         {
             return false;
         }
+
         m_iUdpFd = socket( AF_INET,  SOCK_DGRAM | SOCK_NONBLOCK,  0);
         if (m_iUdpFd < 0)
         {
@@ -76,28 +76,12 @@ namespace T_UDP
     }
     void UdpServer::StartWorkTask()
     {
-        for(std::vector<WorkerTask*>::iterator it = m_WTList.begin();
-            it != m_WTList.end(); ++it)
+        m_pWTList = new PthreadPools<WorkerTask>(m_WTItemNums);
+        if (m_pWTList == NULL)
         {
-            if ((*it) == NULL)
-            {
-                continue;
-            }
-            (*it)->Start();
+            return ;
         }
-    }
-
-    void UdpServer::JoinAllTaskWork()
-    {
-        for(std::vector<WorkerTask*>::iterator it = m_WTList.begin();
-            it != m_WTList.end(); ++it)
-        {
-            if (*it == NULL)
-            {
-                continue;
-            }
-            (*it)->JoinWork();
-        }
+        m_pWTList->StartAllThreads();
     }
 
     bool UdpServer::Run() 
@@ -114,12 +98,24 @@ namespace T_UDP
         DupUDPFd(iFdList);
         for (int iIndex = 0; iIndex < m_WTItemNums; ++iIndex)
         {
-            FdEvent * pEvent = new FdEvent(iFdList.at(iIndex));
-            WorkerTask* wtUdp = new WorkerTask(pEvent);
-            m_WTList.push_back(wtUdp);
+            Conn* pEvent = new Conn(iFdList.at(iIndex));
+            m_pEventList.push_back(pEvent);;
         }
         StartWorkTask();
-        JoinAllTaskWork();
+
+        //sleep(1); need not sleep if we use thread-pools;
+        for (int i = 0; i < m_pEventList.size(); ++i)
+        {
+            WorkerTask* pTask = m_pWTList->GetIndexThread(i);
+            if (pTask == NULL)
+            {
+                std::cout << "get thread task from thread pool is null, pool index: " 
+                    << i << std::endl;
+                break;
+            }
+            pTask->AddRConn(m_pEventList.at(i));
+        }
+
         return true;
     }
 }

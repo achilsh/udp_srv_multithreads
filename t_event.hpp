@@ -1,6 +1,7 @@
 /**
  * @file: t_event.hpp
- * @brief: 
+ * @brief: 连接对象的实现文件，把对网络数据的接收、发送等接口抽象成一个连接对象.
+ *        提供读写事件的设置，读写事件就绪时回调接口的实现.
  * @author:  wusheng Hu
  * @version: v0x0001
  * @date: 2018-04-18
@@ -29,16 +30,37 @@
 namespace T_UDP
 {
     #define MAX_RECV_LEN (1024)
-    class FdEvent
+    class Conn 
     {
      public:
-      FdEvent(int iFd);
-      virtual ~FdEvent();
-      static void ReadCallBack(int iFd, short sEvent, void *pData);
-      static void WriteCallBack(int iFd, short sEvent, void *pData);
+      Conn(int iFd);
+      virtual ~Conn();
+
+      /**
+       * @brief: AddEvent 
+       *  对外提供向该连接对象添加读、写事件接口
+       * @param pEvBase
+       *     事件集合，就是新事件添加到的地方。一般由主线程去管理.
+       * @param iEvent
+       *     要添加的新事件.
+       *
+       * @return 
+       */
       bool AddEvent(struct event_base *pEvBase, int iEvent);
+
+      /**
+       * @brief: DelEvent 
+       *  对外提供  将事件从事件集合删除接口.
+       * @param pEvBase
+       * @param pEvent
+       * @param iEvent
+       *
+       * @return 
+       */
       bool DelEvent(struct event_base *pEvBase, struct event* pEvent, int iEvent);
      private:
+      static void ReadCallBack(int iFd, short sEvent, void *pData);
+      static void WriteCallBack(int iFd, short sEvent, void *pData);
       bool DoReadProcess(int iFd);
       bool DoWriteProcess(int iFd);
       bool DoCmd(int iret);
