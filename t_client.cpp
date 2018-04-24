@@ -28,15 +28,6 @@ namespace T_CLIENT
     //
     int TestOneClient::main()
     {
-        /***
-        if (false == Init())
-        {
-            Stop();
-            std::cout << "init TestOneClient fail, so stop it " << std::endl;
-            return false;
-        }
-        ***/
-
         for (int i = 0; i < m_iTestNums; ++i)
         {
             char buf[1024];
